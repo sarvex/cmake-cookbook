@@ -16,8 +16,7 @@ def get_lib_handle(definitions, header_file, library_file):
     _interface = [l.strip('\r') for l in interface.split('\n')]
 
     ffi.cdef('\n'.join(_interface))
-    lib = ffi.dlopen(library_file)
-    return lib
+    return ffi.dlopen(library_file)
 
 
 # this interface requires the header file and library file

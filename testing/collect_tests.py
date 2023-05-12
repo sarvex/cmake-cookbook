@@ -22,14 +22,13 @@ def get_min_cmake_version(file_name):
                       f.read())
         assert s is not None, "get_min_cmake_version had trouble with file {0}".format(
             file_name)
-        cmake_version = s.group(1)
+        cmake_version = s[1]
     return cmake_version
 
 
 def get_system_cmake_version():
     output = subprocess.check_output(['cmake', '--version']).decode('utf-8')
-    cmake_version = re.search(r'cmake version (.*?)\n', output).group(1)
-    return cmake_version
+    return re.search(r'cmake version (.*?)\n', output)[1]
 
 
 def streamer(line, *, file_handle=sys.stdout, end='', verbose=True):
@@ -72,23 +71,22 @@ def run_command(*, step, command, expect_failure):
         colorama.Fore.BLUE + colorama.Style.BRIGHT + '  {0} ... '.format(step))
     if child.returncode == 0:
         streamer(colorama.Fore.GREEN + colorama.Style.BRIGHT + 'OK', end='\n')
+    elif expect_failure:
+        streamer(
+            colorama.Fore.YELLOW + colorama.Style.BRIGHT +
+            'EXPECTED TO FAIL',
+            end='\n')
     else:
-        if expect_failure:
-            streamer(
-                colorama.Fore.YELLOW + colorama.Style.BRIGHT +
-                'EXPECTED TO FAIL',
-                end='\n')
-        else:
-            streamer(
-                colorama.Fore.RED + colorama.Style.BRIGHT + 'FAILED', end='\n')
-            streamer(
-                '{cmd}\n {out}{err}'.format(
-                    cmd=command, out=stdout, err=stderr),
-                end='\n')
-            return_code = child.returncode
-            if die_hard():
-                raise subprocess.CalledProcessError(child.returncode,
-                                                    child.args)
+        streamer(
+            colorama.Fore.RED + colorama.Style.BRIGHT + 'FAILED', end='\n')
+        streamer(
+            '{cmd}\n {out}{err}'.format(
+                cmd=command, out=stdout, err=stderr),
+            end='\n')
+        return_code = child.returncode
+        if die_hard():
+            raise subprocess.CalledProcessError(child.returncode,
+                                                child.args)
 
     return return_code
 
@@ -108,7 +106,7 @@ def run_example(topdir, generator, ci_environment, buildflags, recipe, example):
     skip_global, expect_failure_global, env_global, definitions_global, targets_global = extract_menu_file(
         menu_file, generator, ci_environment)
 
-    sys.stdout.write('\n  {}\n'.format(example))
+    sys.stdout.write(f'\n  {example}\n')
 
     # extract local menu
     menu_file = recipe / example / 'menu.yml'
@@ -198,9 +196,8 @@ def run_example(topdir, generator, ci_environment, buildflags, recipe, example):
             step = '{0} configuration {1}'.format(target, configuration)
 
             # on VS '--target test' fails but '--target RUN_TESTS' seems to work
-            if generator.startswith('Visual Studio'):
-                if target == 'test':
-                    target = 'RUN_TESTS'
+            if generator.startswith('Visual Studio') and target == 'test':
+                target = 'RUN_TESTS'
 
             command = base_command + ' --config {0} --target {1}'.format(
                 configuration, target)
@@ -235,7 +232,7 @@ def main(arguments):
     ci_environment = get_ci_environment()
 
     # glob recipes
-    recipes = [r for r in sorted(topdir.glob(arguments['<regex>']))]
+    recipes = list(sorted(topdir.glob(arguments['<regex>'])))
     if not recipes:
         raise RuntimeError('Empty list of recipes to test: provide a valid regex')
 

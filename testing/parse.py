@@ -34,9 +34,7 @@ def extract_menu_file(file_name, generator, ci_environment):
     # assemble targets
     targets = []
     if 'targets' in config:
-        for entry in config['targets']:
-            targets.append(entry)
-
+        targets.extend(iter(config['targets']))
     if ci_environment not in config:
         return False, False, {}, {}, targets
 

@@ -4,25 +4,15 @@ import os
 def get_ci_environment():
     if os.environ.get('TRAVIS'):
         travis_os_name = os.environ.get('TRAVIS_OS_NAME')
-        if travis_os_name == 'osx':
-            ci_environment = 'travis-osx'
-        else:
-            ci_environment = 'travis-linux'
+        return 'travis-osx' if travis_os_name == 'osx' else 'travis-linux'
     elif os.environ.get('APPVEYOR'):
         generator = os.environ.get('CMAKE_GENERATOR')
-        if 'Visual Studio' in generator:
-            ci_environment = 'appveyor-vs'
-        else:
-            ci_environment = 'appveyor-msys'
+        return 'appveyor-vs' if 'Visual Studio' in generator else 'appveyor-msys'
     elif os.environ.get('CIRCLECI'):
         circle_compiler = os.environ.get('CIRCLECI_COMPILER')
-        if circle_compiler == 'intel':
-            ci_environment = 'circle-intel'
-        else:
-            ci_environment = 'circle-pgi'
+        return 'circle-intel' if circle_compiler == 'intel' else 'circle-pgi'
     else:
-        ci_environment = 'local'
-    return ci_environment
+        return 'local'
 
 
 def get_generator():
@@ -47,15 +37,13 @@ def is_defined(env_var):
 
     defined = False
     if os.environ.get(env_var) is None:
-        defined = False
+        return False
     elif os.environ.get(env_var).upper() in falsey:
-        defined = False
+        return False
     elif os.environ.get(env_var).upper() in truthy:
-        defined = True
+        return True
     else:
-        defined = False
-
-    return defined
+        return False
 
 
 def verbose_output():

@@ -9,7 +9,7 @@ def main():
 
     tools = {'patchelf': '--print-rpath', 'chrpath': '--list', 'otool': '-L'}
     if patcher not in tools.keys():
-        raise RuntimeError('Unknown tool {}'.format(patcher))
+        raise RuntimeError(f'Unknown tool {patcher}')
     cmd = shlex.split('{:s} {:s} {:s}'.format(patcher, tools[patcher], elfobj))
     rpath = subprocess.run(
         cmd,
